@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    border-radius: 10px;
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.input {
+    border-radius: 0.25rem;
+    outline: none;
+    padding: 8px;
+    line-height: 0;
+}
+
+.button {
+    border-radius: 0.25rem;
+    font-weight: bold;
+    font-size: medium;
+    padding: 18px;
+    background-color: rgb(6 78 59 / var(--tw-bg-opacity));
+    line-height: 0;
+}
