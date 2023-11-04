@@ -10,7 +10,7 @@ import { isAnEmail } from '../../../../../utils/emailValidation';
 import { config, rateLimit } from '../../../../../utils/rateLimit';
 
 // rate limiter configuration
-config(1, { activeMaxRequest: 6 }); // 6 requests allowed per hour
+config(1, { activeMaxRequest: 6, rest: ( 1000 * 60 * 60 * 10 ) }); // 6 requests allowed per 10 mins
 
 export const GET = () => {
     const cookie = cookies();

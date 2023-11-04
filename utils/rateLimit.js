@@ -32,7 +32,7 @@ export const rateLimit = (userId) => {
             return { message: null }; // passed
         }
 
-        return { message: 'I apologize, but we are currently managing our server\'s workload to ensure the best service for all our users. Due to our current capacity, we may not be able to accommodate excessive requests at this time. Please consider trying your request again in about an hour.' };
+        return { message: 'I apologize, but we are currently managing our server\'s workload to ensure the best service for all our users. Due to our current capacity, we may not be able to accommodate excessive requests at this time. Please consider trying your request again' }; // in about an hour.
     }
 
     // 5 request per hour
@@ -40,7 +40,7 @@ export const rateLimit = (userId) => {
         const data = { no_of_request: 0, date_of_request: null, time_to_rest: currentDate };
         listOfRequestMade[userId] = data;
 
-        return { message: 'I apologize, but we are currently managing our server\'s workload to ensure the best service for all our users. Due to our current capacity, we may not be able to accommodate excessive requests at this time. Please consider trying your request again in about an hour.' };
+        return { message: 'I apologize, but we are currently managing our server\'s workload to ensure the best service for all our users. Due to our current capacity, we may not be able to accommodate excessive requests at this time. Please consider trying your request again' }; // in about an hour.
     }
 
     const timeSpanOfRequest = currentDate - rateLimitUserData.date_of_request;

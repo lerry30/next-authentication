@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import ErrorField from '@/app/components/ErrorField';
+import Loading from '../components/Loading';
 import { sendJSON, getData } from '../../../utils/send';
 import { emptySignUpFields } from '../../../utils/emptyValidation';
 
@@ -20,6 +21,7 @@ const SignUpPage = () => {
     const [ invalidFieldsValue, setInvalidFieldsValue ] = useState({});
     const [ pendingVerification, setPendingVerification ] = useState(false);
     const [ code, setCode ] = useState('');
+    const [ loading, setLoading ] = useState(false);
     const router = useRouter();
 
     const handleError = (error) => {
@@ -38,11 +40,17 @@ const SignUpPage = () => {
     }
 
     const abortVerification = async () => {
+        setLoading(true);
+
         setName({ firstname: null, lastname: null });
         setEmailAddress('');
         setPassword('');
 
         await fetch(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { method: 'DELETE' });
+        setPendingVerification(false);
+        setInvalidFieldsValue({});
+
+        setLoading(false);
     }
 
     const createUserDataKey = async () => {
@@ -54,6 +62,7 @@ const SignUpPage = () => {
         ev.preventDefault();
 
         setInvalidFieldsValue({});
+        setLoading(true);
 
         const invalidFields = emptySignUpFields(name.firstname, name.lastname, emailAddress, password);
         for(const [ field, message ] of Object.entries(invalidFields)) {
@@ -80,24 +89,28 @@ const SignUpPage = () => {
             console.log(error); // development
             handleError(error);
         }
+
+        setLoading(false);
     };
     
     // This verifies the user using email code that is delivered.
     const onPressVerify = async (ev) => {
         ev.preventDefault();
+        setLoading(true);
     
         try {
             await createUserDataKey();
 
             if(!code) {
                 setInvalidFieldsValue(prev => ({ ...prev, unauth: 'Verification code is required. Check your email to get the verification code' }));
+                setLoading(false);
                 return;
             }
 
             const responseFromVerificationCode = await sendJSON(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { code });
+            setCode(''); // to reset
 
             console.log(responseFromVerificationCode);
-
             if(responseFromVerificationCode?.success) {
                 fetch(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { method: 'DELETE' });
                 router.push("/");
@@ -107,15 +120,12 @@ const SignUpPage = () => {
         } catch (error) {
             // abort verification
             handleError(error);
-
-            if(!error?.cause?.payload?.abort) return;
-
-            await abortVerification();
-            setTimeout(() => {
-                setPendingVerification(false);
-                setInvalidFieldsValue({});
-            }, 2000);
+            
+            if(!error?.cause?.payload?.abort)
+                setTimeout(abortVerification, 2000);
         }
+
+        setLoading(false);
     };
 
     // for firstname and lastname
@@ -145,7 +155,9 @@ const SignUpPage = () => {
     }, []);
     
     return (
+        // { state.postRequest.pathname && <Loading customStyle="w-full min-h-screen" /> }
         <div className="card w-96 bg-zinc-50 shadow-lg shadow-indigo-500/40 dark:bg-neutral-800 dark:border dark:border-neutral-500 dark:shadow-black dark:text-white">
+            { loading && <Loading customStyle="w-full min-h-screen" /> }
             { !pendingVerification && (
                 <form>
                     <h3 className="text-center font-extrabold text-3xl">Sign Up</h3>
@@ -219,11 +231,7 @@ const SignUpPage = () => {
             { pendingVerification && (
                 <div className="w-full">
                     <button 
-                        onClick={ async () => {
-                            await abortVerification();
-                            setPendingVerification(false);
-                            setInvalidFieldsValue({});
-                        } }
+                        onClick={ abortVerification }
                         className="absolute top-8 left-8"
                     >
                             &lt;-{ ' ' }cancel

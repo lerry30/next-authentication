@@ -5,11 +5,13 @@ import { sendJSON, getData } from '../../../utils/send';
 
 import Link from 'next/link';
 import ErrorField from '@/app/components/ErrorField';
+import Loading from '../components/Loading';
  
 const SignInPage = () => {
     const [ emailAddress, setEmailAddress ] = useState('');
     const [ password, setPassword ] = useState('');
     const [ invalidFieldsValue, setInvalidFieldsValue ] = useState({});
+    const [ loading, setLoading ] = useState(false);
 
     const router = useRouter();
 
@@ -22,6 +24,7 @@ const SignInPage = () => {
         e.preventDefault();
 
         setInvalidFieldsValue({});
+        setLoading(true);
     
         try {
             await createUserDataKey();
@@ -38,6 +41,10 @@ const SignInPage = () => {
             // const { message } = error.errors[0];
             setInvalidFieldsValue({ unauth: error.message });
         }
+
+        // for some reason redirecting to home page
+        // takes quite a bit of time, I set a timeout
+        setTimeout(setLoading(false), 2000);
     };
 
     const start = async () => {
@@ -57,6 +64,7 @@ const SignInPage = () => {
     
     return (
         <div className="card w-96 bg-zinc-50 shadow-lg shadow-indigo-500/40 dark:bg-neutral-800 dark:border dark:border-neutral-500 dark:shadow-black">
+            { loading && <Loading customStyle="w-full min-h-screen" /> }
             <form className="flex flex-col gap-2">
                 <h3 className="text-center font-extrabold text-3xl">Sign In</h3>
                 <div>
