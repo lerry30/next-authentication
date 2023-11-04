@@ -82,7 +82,8 @@ export const POST = async (request) => {
         */
         const userFromDb = await User.findOne({ email });
         if(userFromDb)
-            return NextResponse.json({ message: 'User already exist.', errorData: 'unauth' }, { status: 401 });
+            // User already exist.
+            return NextResponse.json({ message: 'Invalid credentials.', errorData: 'unauth' }, { status: 401 });
 
         /*
             create random 6 digit, for verification code that will be send to user email

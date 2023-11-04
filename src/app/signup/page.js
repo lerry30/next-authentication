@@ -37,6 +37,14 @@ const SignUpPage = () => {
         setInvalidFieldsValue(prev => ({ ...prev, [errorData]: error.message }));
     }
 
+    const abortVerification = async () => {
+        setName({ firstname: null, lastname: null });
+        setEmailAddress('');
+        setPassword('');
+
+        await fetch(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { method: 'DELETE' });
+    }
+
     const createUserDataKey = async () => {
         await getData(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/auth`);
     }
@@ -102,14 +110,11 @@ const SignUpPage = () => {
 
             if(!error?.cause?.payload?.abort) return;
 
-            setName({ firstname: null, lastname: null });
-            setEmailAddress('');
-            setPassword('');
-
+            await abortVerification();
             setTimeout(() => {
                 setPendingVerification(false);
                 setInvalidFieldsValue({});
-            }, 3000);
+            }, 2000);
         }
     };
 
@@ -213,6 +218,16 @@ const SignUpPage = () => {
 
             { pendingVerification && (
                 <div className="w-full">
+                    <button 
+                        onClick={ async () => {
+                            await abortVerification();
+                            setPendingVerification(false);
+                            setInvalidFieldsValue({});
+                        } }
+                        className="absolute top-8 left-8"
+                    >
+                            &lt;-{ ' ' }cancel
+                    </button>
                     <form>
                         <input
                             value={code}
@@ -226,10 +241,10 @@ const SignUpPage = () => {
                         <button 
                             onClick={onPressVerify}
                             className="button w-full mt-2 text-sm"
-                        >
-                            Verify Email
-                        </button>
-                    </form>
+                    >
+                        Verify Email
+                    </button>
+                </form>
                 </div>
             )}
         </div>

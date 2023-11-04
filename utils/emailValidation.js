@@ -3520,8 +3520,10 @@ export const isDisposableEmail = (email) => {
         "undewp.com": true,
     };
 
-    const emailDomainName = email.substring(email.indexOf(email) + 1);
-    return listOfDisposableDomainName[emailDomainName];
+    // if there's no @ in email
+    if(!email.includes('@')) return true; // is disposable email? yes
+    const emailDomainName = email.substring(email.indexOf('@') + 1);
+    return listOfDisposableDomainName[emailDomainName] || false;
 }
 
 export const isAnEmail = (email) => {
