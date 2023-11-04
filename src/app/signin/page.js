@@ -1,15 +1,21 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { sendJSON, getData } from '../../../utils/send';
 
+import Link from 'next/link';
 import ErrorField from '@/app/components/ErrorField';
  
 const SignInPage = () => {
     const [ emailAddress, setEmailAddress ] = useState('');
     const [ password, setPassword ] = useState('');
     const [ invalidFieldsValue, setInvalidFieldsValue ] = useState({});
+
     const router = useRouter();
+
+    const createUserDataKey = async () => {
+        await getData(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/signin`);
+    }
 
     // start the sign In process.
     const handleSubmit = async (e) => {
@@ -18,20 +24,36 @@ const SignInPage = () => {
         setInvalidFieldsValue({});
     
         try {
-        
-            if (result.status === 'complete') {
+            await createUserDataKey();
 
-                router.push('/')
+            const signInResponse = await sendJSON(`${process.env.NEXT_PUBLIC_DOMAIN_NAME}/api/users/signin`, { email: emailAddress, password });
+            if(signInResponse?.success) {
+                fetch(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/signin`, { method: 'DELETE' });
+                router.push("/");
             } else {
-                /*Investigate why the login hasn't completed */
-                // console.log(result);
+                setInvalidFieldsValue(prev => ({ ...prev, unauth: 'There\'s something wrong. Please try again later.' }));
             }
         } catch (error) {
             // console.error('error', error.errors[0].longMessage)
             // const { message } = error.errors[0];
-            setInvalidFieldsValue({ unauth: 'Invalid email or password' });
+            setInvalidFieldsValue({ unauth: error.message });
         }
     };
+
+    const start = async () => {
+        // is signed in
+        const signInStatus = await getData(`${process.env.NEXT_PUBLIC_DOMAIN_NAME}/api/users/signed`);
+        if(signInStatus.signedIn) {
+            router.push('/');
+        } else {
+            // if not
+            createUserDataKey();
+        }
+    }
+
+    useEffect(() => {
+        start();
+    }, []);
     
     return (
         <div className="card w-96 bg-zinc-50 shadow-lg shadow-indigo-500/40 dark:bg-neutral-800 dark:border dark:border-neutral-500 dark:shadow-black">

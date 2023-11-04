@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import ErrorField from '@/app/components/ErrorField';
-import { sendJSON } from '../../../utils/send';
-import { emptyFields } from '../../../utils/emptyValidation';
+import { sendJSON, getData } from '../../../utils/send';
+import { emptySignUpFields } from '../../../utils/emptyValidation';
 
 /**
  * a bit of validation in client, then in server
@@ -23,7 +23,7 @@ const SignUpPage = () => {
     const router = useRouter();
 
     const handleError = (error) => {
-        const errorData = error?.cause?.payload?.errorData || '';
+        const errorData = error?.cause?.payload?.errorData;
         if(!errorData) return;
 
         if(typeof errorData === 'object') {
@@ -37,13 +37,17 @@ const SignUpPage = () => {
         setInvalidFieldsValue(prev => ({ ...prev, [errorData]: error.message }));
     }
 
+    const createUserDataKey = async () => {
+        await getData(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/auth`);
+    }
+
     // start the sign up process.
     const handleSubmit = async (ev) => {
         ev.preventDefault();
 
         setInvalidFieldsValue({});
 
-        const invalidFields = emptyFields(name.firstname, name.lastname, emailAddress, password);
+        const invalidFields = emptySignUpFields(name.firstname, name.lastname, emailAddress, password);
         for(const [ field, message ] of Object.entries(invalidFields)) {
             setInvalidFieldsValue(prev => ({ ...prev, [field]: message }));
         }
@@ -51,38 +55,61 @@ const SignUpPage = () => {
         if(Object.values(invalidFields).length > 0) return;
     
         try {
-            const sendVerificationCode = await sendJSON(
-                `${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/verification`,
+            await createUserDataKey();
+
+            await sendJSON(
+                `${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users/auth`,
                 { 
                     firstname: name.firstname,
                     lastname: name.lastname,
                     email: emailAddress,
-                    password
+                    password,
                 }
             );
 
-            console.log(sendVerificationCode);
             setPendingVerification(true);
-            localStorage.setItem('pending-verification', true);
-
-            // send verification code to user's email
         } catch (error) {
+            console.log(error); // development
             handleError(error);
         }
     };
     
     // This verifies the user using email code that is delivered.
-    const onPressVerify = async (e) => {
-        e.preventDefault();
+    const onPressVerify = async (ev) => {
+        ev.preventDefault();
     
         try {
-            // if(response?.successful) {
-            //     router.push("/");
-            // } else {
-            //     setInvalidFieldsValue(prev => ({ ...prev, unauth: 'There\'s something wrong. Please try again later.' }));
-            // }
+            await createUserDataKey();
+
+            if(!code) {
+                setInvalidFieldsValue(prev => ({ ...prev, unauth: 'Verification code is required. Check your email to get the verification code' }));
+                return;
+            }
+
+            const responseFromVerificationCode = await sendJSON(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { code });
+
+            console.log(responseFromVerificationCode);
+
+            if(responseFromVerificationCode?.success) {
+                fetch(`${ process.env.NEXT_PUBLIC_DOMAIN_NAME }/api/users`, { method: 'DELETE' });
+                router.push("/");
+            } else {
+                setInvalidFieldsValue(prev => ({ ...prev, unauth: 'There\'s something wrong. Please try again later.' }));
+            }
         } catch (error) {
+            // abort verification
             handleError(error);
+
+            if(!error?.cause?.payload?.abort) return;
+
+            setName({ firstname: null, lastname: null });
+            setEmailAddress('');
+            setPassword('');
+
+            setTimeout(() => {
+                setPendingVerification(false);
+                setInvalidFieldsValue({});
+            }, 3000);
         }
     };
 
@@ -95,9 +122,21 @@ const SignUpPage = () => {
         });
     }
 
+    const start = async () => {
+        // is signed in
+        const signInStatus = await getData(`${process.env.NEXT_PUBLIC_DOMAIN_NAME}/api/users/signed`);
+        if(signInStatus.signedIn) {
+            router.push('/');
+        } else {
+            // if not
+            const isUserDataAreSaved = document.cookie.includes('user-signup-data-token');
+            setPendingVerification(isUserDataAreSaved);
+            createUserDataKey();
+        }
+    }
+
     useEffect(() => {
-        const isVerified = !!localStorage.getItem('pending-verification') || false;
-        setPendingVerification(isVerified);
+        start();
     }, []);
     
     return (

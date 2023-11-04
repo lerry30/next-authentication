@@ -32,6 +32,7 @@ export const sendForm = async (urlPath, form) => {
 export const getData = async (urlPath) => {
     const res = await fetch(urlPath);
     const payload = await res.json();
+    const message = payload?.message || 'No response';
 
     if(!res.ok) throw new Error(message, { cause: { response: res, payload } });
 

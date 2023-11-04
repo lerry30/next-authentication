@@ -4,7 +4,7 @@
     characters.
 */
 export const isAValidPassword = (password) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&_]{8,}$/;
     return regex.test(password);
 };
 
@@ -12,7 +12,7 @@ export const missingRequirements = (password) => {
     const isLowercase = /[a-z]/.test(password);
     const isUppercase = /[A-Z]/.test(password);
     const isDigit = /\d/.test(password);
-    const isSpecialChar = /[@$!%*?&]/.test(password);
+    const isSpecialChar = /[@$!%*?&_]/.test(password);
     const isLengthValid = password.length >= 8;
   
     const missing = [
@@ -24,5 +24,6 @@ export const missingRequirements = (password) => {
     ];
 
     const requirements = missing.join('');
+    if(!requirements) return 'Valid special characters @$!%*?&_';
     return `Requirements: ${requirements}`;
 }
