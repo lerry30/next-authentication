@@ -208,6 +208,7 @@ const SignUpPage = () => {
                         <ErrorField message={ invalidFieldsValue['password'] }/>
                     </div>
                     <button 
+                        type="submit"
                         onClick={handleSubmit}
                         className="button w-full mt-2 text-sm"
                     >

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server.js';
-// import { sendEmail } from '../../../../../utils/email';
+import { sendEmail } from '../../../../../utils/awsSes';
 import { rateLimit } from '../../../../../utils/rateLimit';
 import { isDisposableEmail, isAnEmail } from '../../../../../utils/emailValidation';
 import { isAValidPassword, missingRequirements } from '../../../../../utils/passwordValidation';
@@ -93,6 +93,7 @@ export const POST = async (request) => {
         /*
             send verification code
         */
+        // await sendEmail(email);
 
         const hashPassword = await toHash(password);
         const hashVerificationCode = await toHash(`${ verificationCode }`);

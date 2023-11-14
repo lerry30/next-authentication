@@ -20,8 +20,8 @@ const SignInPage = () => {
     }
 
     // start the sign In process.
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (ev) => {
+        ev.preventDefault();
 
         setInvalidFieldsValue({});
         setLoading(true);
@@ -88,6 +88,7 @@ const SignInPage = () => {
                     />
                 </div>
                 <button 
+                    type="submit"
                     onClick={handleSubmit}
                     className="button w-full mt-2 text-sm"
                 >
